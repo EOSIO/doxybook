@@ -151,7 +151,7 @@ class MdDocument(Md):
 
     def set_title(self, title: str):
         self.title = title
-    
+
     def set_keywords(self, keywords: List[str]):
         self.keywords = keywords
 
@@ -178,10 +178,11 @@ class MdDocument(Md):
             self.header_gitbook(f)
         elif config.target == 'vuepress':
             self.header_vuepress(f)
-        f.write('---\n\n') 
+        f.write('---\n\n')
 
         for child in self.children:
-            child.render(f, '')
+            if child is not None:
+                child.render(f, '')
 
 class MdList(Md):
     def __init__(self, children: List[Md]):
@@ -238,7 +239,7 @@ class MdTableRow(Md):
 class MdTable(Md):
     def __init__(self):
         Md.__init__(self, [])
-    
+
     def render(self, f: MdRenderer, indent: str):
         is_first = True
         f.eol()

@@ -79,7 +79,7 @@ def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, r
             typ.append(Text('define '))
 
         typ.extend(convert_xml_para(memberdef.find('type'), cache))
-        
+
         if kind == 'function':
             name.append(Text(' ('))
             params = memberdef.findall('param')
@@ -103,7 +103,7 @@ def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, r
                 if d is not None:
                     name.append(Text(' = '))
                     name.extend(convert_xml_para(d, cache))
-            name.append(Text(') ')) 
+            name.append(Text(') '))
 
             # Is deleted?
             if re.search('\\)\\s*=\\s*delete', argsstring):
@@ -308,8 +308,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         document.append(generate_breadcrubs(node))
 
     if compounddef.get('kind') == 'file':
-        document.append(MdParagraph([MdBold([MdLink([Text('Go to the source code of this file.')], refid + '_source.md')])]))  
-        document.append(MdParagraph([Text('\n')]))
+        document.append(MdParagraph([MdBold([MdLink([Text('Go to the source code of this file.')], refid + '_source.md')])]))
 
     # Add brief description
     detaileddescription_paras = compounddef.find('detaileddescription').findall('para')
@@ -386,7 +385,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
             link = MdLink([MdBold([Text(name)])], refid + '.md')
             link_with_brief = MdParagraph([link, Text(' ')])
             link_with_brief.extend(generate_paragraph(briefdescription_paras, cache))
-            
+
             lst.append(link_with_brief)
 
         document.append(lst)
@@ -409,10 +408,10 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
             name = innerfile.text
 
             name_cell = MdTableCell([MdLink([MdBold([Text(name)])], refid + '.md')])
-            
+
             try:
                 innerfile_root = xml.etree.ElementTree.parse(os.path.join(index_path, refid + '.xml')).getroot()
-                compound = innerfile_root.find('compounddef')                
+                compound = innerfile_root.find('compounddef')
                 briefdescription = compound.find('briefdescription').findall('para')
                 if len(briefdescription) > 0:
                     name_cell.append(Text(' '))
@@ -454,10 +453,10 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
             keywords.append(name)
 
             name_cell = MdTableCell([MdLink([MdBold([Text(name)])], refid + '.md')])
-            
+
             try:
                 innerfile_root = xml.etree.ElementTree.parse(os.path.join(index_path, refid + '.xml')).getroot()
-                compound = innerfile_root.find('compounddef')                
+                compound = innerfile_root.find('compounddef')
                 briefdescription = compound.find('briefdescription').findall('para')
                 if len(briefdescription) > 0:
                     name_cell.append(Text('<br>'))
@@ -488,7 +487,9 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         if section_kind.startswith('private'):
             continue
 
-        document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
+        # Seems to work incorrectly, would print an empty "Functions" section, and then a populated "Functions Documentation" section below it. Only useful for classes.
+        if section_kind not in "func" and section_kind not in "typedef":
+            document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
 
         table = make_section(sectiondef, cache, reimplemented, [])
         document.append(table)
@@ -531,8 +532,8 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         inherited_sectiondefs = inheritance_compounddef.findall('sectiondef')
         for sec in inherited_sectiondefs:
             section_kind = sec.get('kind')
-            
-            if not section_kind or section_kind.startswith('private') or section_kind not in SECTION_DEFS:
+
+            if section_kind.startswith('private'):
                 continue
 
             if refid in skip_sections:
@@ -580,7 +581,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         section_kind = sectiondef.get('kind')
         if section_kind.startswith('private'):
             continue
-            
+
         document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind] + ' Documentation')]))
 
         memberdefs = sectiondef.findall('memberdef')
@@ -594,7 +595,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
             except:
                 pass
             name = memberdef.find('name').text
-            
+
             if config.target == 'gitbook':
                 if node is not None and node.overloaded:
                     document.append(MdHeader(3, [Text(kind + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')</a>')]))
@@ -670,7 +671,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         document.append(Text('\n'))
         document.append(MdLine())
         document.append(MdParagraph([
-            Text('The documentation for this class was generated from the following file: '), 
+            Text('The documentation for this class was generated from the following file: '),
             MdCode([Text(location.get('file'))])
         ]))
 
@@ -681,4 +682,3 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
 
     with open(output_file, 'w+') as f:
         document.render(MdRenderer(f))
-
