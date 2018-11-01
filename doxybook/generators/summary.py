@@ -54,7 +54,7 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
                 start = m.start()
                 start = i
             continue
-        
+
         if start is not None and end is None:
             if not line.startswith(' ' * (offset + 2)):
                 end = i
@@ -68,18 +68,18 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
 
     with open(summary_file, 'w+') as f:
         # Write first part of the file
-        for i in range(0, start+1):
+        for i in range(0, start):
             f.write(content[i])
-
+        if modules:
+            f.write(generate_link('API', diff + '/' + 'modules.md'))
+            for key,value in modules.items():
+                f.write(' ' * (offset+2) + generate_link(value.replace("_"," ").capitalize(), diff + '/' + key + '.md'))
+        for i in range(start, start+1):
+            f.write(content[i])
         if pages:
             f.write(' ' * (offset+2) + generate_link('Related Pages', diff + '/' + 'pages.md'))
             for key,value in pages.items():
-                f.write(' ' * (offset+4) + generate_link(value, diff + '/' + key + '.md'))
-        if modules:
-            f.write(' ' * (offset+2) + generate_link('Modules', diff + '/' + 'modules.md'))
-            generate_recursive_modules(f, modules, offset + 4, diff)
-            #for key,value in modules.items():
-            #    f.write(' ' * (offset+4) + generate_link(value, diff + '/' + key + '.md'))
+                f.write(' ' * (offset+4) + generate_link(value.replace("_"," ").capitalize(), diff + '/' + key + '.md'))
         f.write(' ' * (offset+2) + generate_link('Class Index', diff + '/' + 'classes.md'))
         f.write(' ' * (offset+2) + generate_link('Function Index', diff + '/' + 'functions.md'))
         f.write(' ' * (offset+2) + generate_link('Variable Index', diff + '/' + 'variables.md'))
@@ -89,8 +89,7 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
         if files:
             f.write(' ' * (offset+2) + generate_link('Files', diff + '/' + 'files.md'))
             generate_files(f, files, offset + 4, diff)
-        
+
         # Write second part of the file
         for i in range(end, len(content)):
             f.write(content[i])
-                
