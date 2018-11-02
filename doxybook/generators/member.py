@@ -487,7 +487,9 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         if section_kind.startswith('private'):
             continue
 
-        document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
+        # Seems to work incorrectly, would print an empty "Functions" section, and then a populated "Functions Documentation" section below it. Only useful for classes.
+        if section_kind not in "func" and section_kind not in "typedef":
+            document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
 
         table = make_section(sectiondef, cache, reimplemented, [])
         document.append(table)
