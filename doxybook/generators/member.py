@@ -298,7 +298,11 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     keywords.append(compoundname)
 
     # Add title
-    title = compounddef.get('kind') + ' ' + compoundname
+    kind = compounddef.get('kind')
+    if kind == 'group':
+        title = compounddef.findtext('title', compoundname)
+    else:
+        title = kind + ' ' + compoundname
     document.append(MdHeader(1, [Text(title)]))
 
     if node.kind.is_parent():
