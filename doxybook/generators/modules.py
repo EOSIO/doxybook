@@ -28,7 +28,7 @@ def make_groups_list(index_path: str, node: Node, keywords: list, modules: dict,
                 name = compounddef.find('compoundname').text
                 title = compounddef.findtext('title', name.replace("_"," ").capitalize()) 
                 refid = compounddef.get('id')
-                p.append(MdBold([MdLink([Text(name)], refid + '.md')]))
+                p.append(MdBold([MdLink([Text(title)], refid + '.md')]))
 
                 modules[refid] = {
                     'name': name,
