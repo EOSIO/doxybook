@@ -75,7 +75,7 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
         for i in range(0, start):
             f.write(content[i])
         if modules:
-            f.write(generate_link('Smart Contract API', diff + '/' + 'modules.md'))
+            f.write(generate_link('Modules', diff + '/' + 'modules.md'))
             generate_recursive_modules(f, modules, offset + 4, diff)
             # for key,value in modules.items():
             #     f.write(' ' * (offset+2) + generate_link(value.replace("_"," ").capitalize(), diff + '/' + key + '.md'))
