@@ -1,6 +1,8 @@
 from doxybook.kind import Kind
 from doxybook.utils import mangle_name
 from doxybook.config import config
+from doxybook.refid import normalize_refid
+import re
 
 class Node:
     def __init__(self, name: str, refid: str, kind: str):
@@ -45,25 +47,35 @@ class Node:
 
         return None
 
-    def get_anchor_hash(self):
+    def get_anchor_hash(self, prefix = ''):
         if config.target == 'gitbook':
             return self.refid[-34:]
-        anchor = self.kind.value + '-' + self.name.replace(' ', '-').replace('_', '-').replace('=', '').replace('~', '').lower()
+
+        if not prefix:
+            prefix = self.kind.value
+
+        anchor = prefix + '-' + self.name
         if self.overloaded:
-            return anchor + '-' + str(self.overload_num) + '-' + str(self.overload_total)
-        else:
-            return anchor
+            anchor = anchor + '-' + str(self.overload_num) + '-' + str(self.overload_total)
+        
+        # Reference to https://github.com/Flet/github-slugger/blob/master/index.js
+        # Change anchor to github flavored anchor
+        anchor = re.sub(r'[\u2000-\u206F\u2E00-\u2E7F\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]', '', anchor)
+        anchor = re.sub(r'\s', '-', anchor)
+        anchor = anchor.lower()
+        
+        return anchor
 
     def get_kind_str(self):
         return self.kind.value
 
     def generate_url(self) -> str:
-        if self.kind.is_parent():
-            return self.refid + '.md'
-        else:
-            if self.refid.startswith('group_'):
-                return self.refid[:-36] + '.md#' + self.get_anchor_hash()
-            return self.refid[:-35] + '.md#' + self.get_anchor_hash()
+        normalized_refid = normalize_refid(self.refid)
+        url = normalized_refid + '.md'
+        if not self.kind.is_parent():
+            url += '#' + self.get_anchor_hash()
+        return url
 
     def finalize(self):
         self.url = self.generate_url()
+        print('urrrlll', self.refid, self.url)

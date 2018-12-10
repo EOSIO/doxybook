@@ -26,11 +26,13 @@ def make_groups_list(index_path: str, node: Node, keywords: list, modules: dict,
                 p = MdParagraph([])
 
                 name = compounddef.find('compoundname').text
+                title = compounddef.findtext('title', name.replace("_"," ").capitalize()) 
                 refid = compounddef.get('id')
-                p.append(MdBold([MdLink([Text(name)], refid + '.md')]))
+                p.append(MdBold([MdLink([Text(title)], refid + '.md')]))
 
                 modules[refid] = {
-                    'name': name
+                    'name': name,
+                    'title': title
                 }
 
                 p.append(Text(' '))
@@ -43,11 +45,7 @@ def make_groups_list(index_path: str, node: Node, keywords: list, modules: dict,
             test_inner_lst = make_groups_list(index_path, child, keywords, test_modules, cache)
             if test_inner_lst is not None:
                 lst.append(test_inner_lst)
-                name = modules[refid]
-                modules[refid] = {
-                    'name': name['name'],
-                    'innergroups': test_modules
-                }
+                modules[refid]['innergroups'] = test_modules
 
     if is_empty: return None
     return lst

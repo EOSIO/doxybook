@@ -38,6 +38,9 @@ def generate_list_recursive(directory: dict, keywords: List[str]):
     return lst
 
 def generate_files(index_path: str, output_path: str, node: Node, cache: Cache) -> dict:
+    if config.hide_files_page:
+        return {}
+        
     output_file = os.path.join(output_path, 'files.md')
     print('Generating ' + output_file)
     document = MdDocument()

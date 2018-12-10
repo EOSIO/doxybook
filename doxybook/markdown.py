@@ -31,12 +31,18 @@ class Md:
         self.children.extend(child)
 
 class Text:
-    def __init__(self, text: str):
+    def __init__(self, text: str, escape: bool = True):
         self.text = text
+        self.escape = escape
 
     def render(self, f: MdRenderer, indent: str):
         if self.text:
-            f.write(escape(self.text))
+            if self.escape:
+                f.write(escape(self.text))  
+            else:
+                f.write(self.text)
+
+           
 
 class Br:
     def __init__(self):
@@ -170,15 +176,25 @@ class MdDocument(Md):
             f.write('meta:\n')
             f.write('  - name: keywords\n')
             f.write('    content: ' + ' '.join(self.keywords) + '\n')
+    
+    def header_gatsby(self, f: MdRenderer):
+        f.write('title: ' + self.title + '\n')
+        if len(self.keywords) > 0:
+            #f.write('sidebar: auto\n')
+            #f.write('sidebarDepth: 1\n')
+            f.write('meta:\n')
+            f.write('  - name: keywords\n')
+            f.write('    content: ' + ' '.join(self.keywords) + '\n')
 
     def render(self, f: MdRenderer):
-        f.write('---\n')
-
-        if config.target == 'gitbook':
-            self.header_gitbook(f)
-        elif config.target == 'vuepress':
-            self.header_vuepress(f)
-        f.write('---\n\n')
+        # No need to add header for gatsby
+        if config.target != 'gatsby':
+            f.write('---\n')
+            if config.target == 'gitbook':
+                self.header_gitbook(f)
+            elif config.target == 'vuepress':
+                self.header_vuepress(f)
+            f.write('---\n\n')
 
         for child in self.children:
             if child is not None:

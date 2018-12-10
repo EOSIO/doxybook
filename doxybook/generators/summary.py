@@ -19,21 +19,22 @@ def generate_recursive(f: TextIO, node: Node, level: int, diff: str):
 
 def generate_recursive_modules(f: TextIO, modules: dict, level: int, diff: str):
     for key,value in modules.items():
-        f.write(' ' * level + generate_link(value['name'].replace("_"," ").capitalize(), diff + '/' + key + '.md'))
+        f.write(' ' * level + generate_link(value['title'], diff + '/' + key + '.md'))
         # f.write(' ' * level + generate_link(value['name'], diff + '/' + key + '.md'))
         if 'innergroups' in value:
             generate_recursive_modules(f, value['innergroups'], level + 2, diff)
 
-def generate_files(f: TextIO, files: dict, level: int, diff: str):
+def generate_files(f: TextIO, files: dict, level: int, diff: str, output_path: str):
     for key,value in files.items():
         if key == '#':
             continue
         if isinstance(value, dict):
             f.write(' ' * level + generate_link(key + '/', diff + '/' + value['#'] + '.md'))
-            generate_files(f, value, level + 2, diff)
+            generate_files(f, value, level + 2, diff, output_path)
         else:
             f.write(' ' * level + generate_link(key, diff + '/' + value + '.md'))
-            f.write(' ' * level + generate_link(key + ' - source', diff + '/' + value + '_source.md'))
+            if os.path.exists(os.path.join(output_path, diff, value + '_source.md')):
+                f.write(' ' * level + generate_link(key + ' - source', diff + '/' + value + '_source.md'))
 
 def generate_summary(output_path: str, summary_file: str, root: Node, modules: list, pages: list, files: dict):
     print('Modifying', summary_file)
@@ -75,7 +76,7 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
         for i in range(0, start):
             f.write(content[i])
         if modules:
-            f.write(generate_link('Smart Contract API', diff + '/' + 'modules.md'))
+            f.write(generate_link('Modules', diff + '/' + 'modules.md'))
             generate_recursive_modules(f, modules, offset + 4, diff)
             # for key,value in modules.items():
             #     f.write(' ' * (offset+2) + generate_link(value.replace("_"," ").capitalize(), diff + '/' + key + '.md'))
@@ -90,10 +91,12 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
         f.write(' ' * (offset+2) + generate_link('Variable Index', diff + '/' + 'variables.md'))
         f.write(' ' * (offset+2) + generate_link('Enumeration Index', diff + '/' + 'enumerations.md'))
         f.write(' ' * (offset+2) + generate_link('Class List', diff + '/' + 'annotated.md'))
-        generate_recursive(f, root, offset + 4, diff)
+        # Determine to show or hide class list expansion
+        if not config.hide_class_list_expansion:
+            generate_recursive(f, root, offset + 4, diff)
         if files:
             f.write(' ' * (offset+2) + generate_link('Files', diff + '/' + 'files.md'))
-            generate_files(f, files, offset + 4, diff)
+            generate_files(f, files, offset + 4, diff, output_path)
 
         # Write second part of the file
         for i in range(end, len(content)):
