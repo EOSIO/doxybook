@@ -19,7 +19,7 @@ def generate_recursive(f: TextIO, node: Node, level: int, diff: str):
 
 def generate_recursive_modules(f: TextIO, modules: dict, level: int, diff: str):
     for key,value in modules.items():
-        f.write(' ' * level + generate_link(value['name'].replace("_"," ").capitalize(), diff + '/' + key + '.md'))
+        f.write(' ' * level + generate_link(value['title'], diff + '/' + key + '.md'))
         # f.write(' ' * level + generate_link(value['name'], diff + '/' + key + '.md'))
         if 'innergroups' in value:
             generate_recursive_modules(f, value['innergroups'], level + 2, diff)
