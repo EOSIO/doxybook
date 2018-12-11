@@ -55,7 +55,7 @@ def convert_xml_para(p: xml.etree.ElementTree.Element, cache: Cache) -> list:
 
         # computeroutput
         elif item.tag == 'computeroutput':
-            ret.append(MdCode([Text(item.text)]))
+            ret.append(MdCode([Text(item.text, False)]))
 
         # programlisting
         elif item.tag == 'programlisting':
