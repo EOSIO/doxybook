@@ -323,7 +323,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
             p.append(MdLink([Text('More...')], '#detailed-description'))
         document.append(p)
 
-    # Add inheriance
+    # Add inheritance
     inheritance_refids:List[str] = []
     basecompoundrefs = compounddef.findall('basecompoundref')
     if len(basecompoundrefs) > 0:
@@ -577,6 +577,25 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                         value += ' ' + initializer.text
                     code.append('    ' + value + ',')
                 code.append('};')
+            
+            elif kind == 'define':
+                define_code = '#define ' + memberdef.find('name').text
+                params = memberdef.findall('./param/defname')
+                for index, param in enumerate(params):
+                    if index == 0: define_code += '('
+                    define_code += param.text
+                    if index != len(params) - 1: 
+                        define_code += ', '
+                    else:
+                        define_code += ')'
+                initializer = memberdef.find('initializer')
+                if initializer:
+                    initializer_text = ''.join(initializer.itertext())
+                    if '\n' in initializer_text:
+                      define_code += '\\\n' + initializer_text
+                    else:
+                      define_code += ' ' + initializer_text
+                code.append(define_code)
 
             else:
                 definition = memberdef.find('definition')
