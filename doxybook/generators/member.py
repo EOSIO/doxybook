@@ -150,6 +150,21 @@ def make_function_code(compoundname: str, memberdef: xml.etree.ElementTree.Eleme
     code = []
     params = memberdef.findall('param')
     argsstring = memberdef.find('argsstring').text
+
+    templateparams = memberdef.findall('./templateparamlist/param')
+    if len(templateparams) > 0:
+        templateparams_code = 'template<'
+        for index, templateparam in enumerate(templateparams):
+            templateparams_code += templateparam.findtext('type')
+            templateparam_defname = templateparam.findtext('defname')
+            if templateparam_defname:
+                templateparams_code += ' ' + templateparam_defname
+            if index != len(templateparams) - 1:
+                templateparams_code += ', '
+            else:
+                templateparams_code += '>'
+        code.append(templateparams_code)
+      
     typ = get_text_only(memberdef.find('type'))
     if len(typ) > 0:
         typ += ' '
