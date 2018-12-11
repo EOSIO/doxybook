@@ -199,13 +199,11 @@ def make_function_code(compoundname: str, memberdef: xml.etree.ElementTree.Eleme
     if memberdef.get('virt') == 'pure-virtual':
         extra += ' = 0'
 
-    name_prefix = ''
-    if not name_prefix:
-        name_prefix = compoundname + '::'
+    definition = memberdef.findtext('definition', '')
     if len(params) > 0:
-        code.append(prefix + typ + name_prefix + memberdef.find('name').text + ' (')
+        code.append(prefix + definition + '(')
     else:
-        code.append(prefix + typ + name_prefix + memberdef.find('name').text + ' ()' + extra)
+        code.append(prefix + definition + '()' + extra)
 
     param_index = 0
     for param in params:
