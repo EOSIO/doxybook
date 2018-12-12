@@ -312,6 +312,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
 
     # Add title
     kind = compounddef.get('kind')
+    # Ignore kind for group
     if kind == 'group':
         title = compounddef.findtext('title', compoundname)
     else:
@@ -559,16 +560,31 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                 pass
             name = memberdef.find('name').text
 
+            prefix = kind
+            if kind == 'variable':
+                var_type = memberdef.find('type')
+                if var_type is not None: 
+                    prefix = ''.join(var_type.itertext())
+            elif kind == 'function':
+                func_ret_type = memberdef.find('type')
+                if func_ret_type is not None: 
+                    prefix = ''.join(func_ret_type.itertext())
+                    # if type is empty, then it's a constructor
+                    if prefix == '': prefix = 'constructor'
+            elif kind == 'define':
+                prefix = '#define'
+                
+
             if config.target == 'gitbook':
                 if node is not None and node.overloaded:
-                    document.append(MdHeader(3, [Text(kind + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')</a>')]))
+                    document.append(MdHeader(3, [Text(prefix + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')</a>')]))
                 else:
-                    document.append(MdHeader(3, [Text(kind + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + '</a>')]))
+                    document.append(MdHeader(3, [Text(prefix + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + '</a>')]))
             else:
                 if node is not None and node.overloaded:
-                    document.append(MdHeader(3, [Text(kind + ' ' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')')]))
+                    document.append(MdHeader(3, [Text(prefix + ' ' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')')]))
                 else:
-                    document.append(MdHeader(3, [Text(kind + ' ' + name)]))
+                    document.append(MdHeader(3, [Text(prefix + ' ' + name)]))
 
             code = []
             if kind == 'function':
@@ -602,7 +618,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                     else:
                         define_code += ')'
                 initializer = memberdef.find('initializer')
-                if initializer:
+                if initializer is not None:
                     initializer_text = ''.join(initializer.itertext())
                     if '\n' in initializer_text:
                       define_code += '\\\n' + initializer_text
