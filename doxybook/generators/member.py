@@ -151,6 +151,7 @@ def make_function_code(compoundname: str, memberdef: xml.etree.ElementTree.Eleme
     params = memberdef.findall('param')
     argsstring = memberdef.find('argsstring').text
 
+    # Print template params
     templateparams = memberdef.findall('./templateparamlist/param')
     if len(templateparams) > 0:
         templateparams_code = 'template<'
@@ -164,8 +165,8 @@ def make_function_code(compoundname: str, memberdef: xml.etree.ElementTree.Eleme
             else:
                 templateparams_code += '>'
         code.append(templateparams_code)
-      
-    typ = get_text_only(memberdef.find('type'))
+    
+    typ = ''.join(memberdef.find('type').itertext())
     if len(typ) > 0:
         typ += ' '
 
@@ -565,12 +566,10 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                 var_type = memberdef.find('type')
                 if var_type is not None: 
                     prefix = ''.join(var_type.itertext())
-            elif kind == 'function':
+            elif (kind == 'function' or kind == 'friend'):
                 func_ret_type = memberdef.find('type')
                 if func_ret_type is not None: 
                     prefix = ''.join(func_ret_type.itertext())
-                    # if type is empty, then it's a constructor
-                    if prefix == '': prefix = 'constructor'
             elif kind == 'define':
                 prefix = '#define'
                 
