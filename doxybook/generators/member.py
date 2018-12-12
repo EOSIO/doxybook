@@ -572,18 +572,41 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                     prefix = ''.join(func_ret_type.itertext())
             elif kind == 'define':
                 prefix = '#define'
-                
+            
+            overloaded_suffix = ''
+            if node is not None and node.overloaded:
+                overloaded_suffix = ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')'
 
+            signature_suffix = ''
+            if kind == 'function' or kind == 'friend':
+                argsstring_text = memberdef.findtext('argsstring', '')
+                params = memberdef.findall('param')
+                if len(params) == 0:
+                    signature_suffix += ' ()'
+                else:
+                  for index, param in enumerate(params):
+                      if index == 0: 
+                          signature_suffix += ' ('
+                      param_type = param.find('type')
+                      if param_type is not None: 
+                          signature_suffix += ''.join(param_type.itertext())
+                      param_declname = param.find('declname')
+                      if param_declname is not None: 
+                          signature_suffix += ' ' + ''.join(param_declname.itertext())
+                      if index != len(params) - 1:
+                          signature_suffix += ', '
+                      else:
+                          signature_suffix += ')'
+                is_const = memberdef.get('const') == 'yes'
+                if is_const:
+                    signature_suffix += ' const'
+
+            suffix = signature_suffix if config.show_func_sig else overloaded_suffix
+            
             if config.target == 'gitbook':
-                if node is not None and node.overloaded:
-                    document.append(MdHeader(3, [Text(prefix + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')</a>')]))
-                else:
-                    document.append(MdHeader(3, [Text(prefix + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + '</a>')]))
+                document.append(MdHeader(3, [Text(prefix + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + suffix + '</a>')]))
             else:
-                if node is not None and node.overloaded:
-                    document.append(MdHeader(3, [Text(prefix + ' ' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')')]))
-                else:
-                    document.append(MdHeader(3, [Text(prefix + ' ' + name)]))
+                document.append(MdHeader(3, [Text(prefix + ' ' + name + suffix)]))
 
             code = []
             if kind == 'function':

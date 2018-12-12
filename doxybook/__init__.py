@@ -77,6 +77,12 @@ def main():
         required=False,
         default=config.hints
     )
+    parser.add_argument('--show-func-sig', 
+        action='store_true',
+        help='If set to true, function signature will be shown in the markdown header (default: false)',
+        required=False,
+        default=config.show_func_sig
+    )
 
     args = parser.parse_args()
 
@@ -87,6 +93,7 @@ def main():
     config.target = args.target
     config.noindex = args.noindex
     config.hints = args.hints
+    config.show_func_sig = args.show_func_sig
 
     if args.summary and not os.path.exists(args.summary):
         raise Exception('The provided summary file does not exist!')
