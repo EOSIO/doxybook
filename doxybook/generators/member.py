@@ -452,9 +452,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         if section_kind.startswith('private'):
             continue
 
-        # Seems to work incorrectly, would print an empty "Functions" section, and then a populated "Functions Documentation" section below it. Only useful for classes.
-        if section_kind not in "func" and section_kind not in "typedef":
-            document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
+        document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
 
         table = make_section(sectiondef, cache, reimplemented, [])
         document.append(table)
@@ -554,16 +552,6 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         for memberdef in memberdefs:
             kind = memberdef.get('kind')
             refid = memberdef.get('id')
-
-            # For some reason, inside compounddef of a group, the id follows the following shorter format:
-            # group__console_1ga0a2f84ed7838f07779ae24c5a9086d33 instead of the usual longer format:
-            # group__console_ga0a2f84ed7838f07779ae24c5a9086d33_1ga0a2f84ed7838f07779ae24c5a9086d33
-            # Here, we are going to convert them, so we can find the node inside the cache
-            is_not_static = memberdef.get('static') != 'yes'
-            if compounddef.get('id').startswith('group__') and is_not_static:
-                refid_tail = refid.split('_')[-1]
-                refid_tail_index = refid.find(refid_tail)
-                refid = refid[:refid_tail_index] + refid_tail[1:] + '_' + refid_tail
                 
             node = None
             try:
