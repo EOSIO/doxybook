@@ -40,7 +40,7 @@ def main():
     parser = argparse.ArgumentParser(description='Convert doxygen XML output into GitBook or Vuepress markdown output.')
     parser.add_argument('-t', '--target', 
         type=str, 
-        help='Select the target: Gitbook (default) or Vuepress, for example: "-t vuepress" or "-t gitbook"',
+        help='Select the target: Gitbook (default) or Vuepress or Gatsby, for example: "-t vuepress" or "-t gitbook"',
         required=False,
         default=config.target
     )
@@ -86,7 +86,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.target != 'gitbook' and args.target != 'vuepress':
+    if args.target != 'gitbook' and args.target != 'vuepress' and args.target != 'gatsby':
         raise Exception('Unknown target: ' + str(args.target))
 
     config.debug = args.debug
