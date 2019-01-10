@@ -34,6 +34,27 @@ SECTION_DEFS = {
     'interface': 'Interfaces'
 }
 
+"""
+Get prefix of a member, i.e.
+int is prefix of `int foo()`
+#define is prefix of `#define`
+"""
+def get_member_prefix(memberdef: xml.etree.ElementTree.Element):
+    kind = memberdef.get('kind')
+    if kind == 'variable':
+        var_type = memberdef.find('type')
+        if var_type is not None: 
+            prefix = ''.join(var_type.itertext())
+    elif (kind == 'function' or kind == 'friend'):
+        func_ret_type = memberdef.find('type')
+        if func_ret_type is not None: 
+            prefix = ''.join(func_ret_type.itertext())
+    elif kind == 'define':
+        prefix = '#define'
+    else:
+        prefix = kind
+    return prefix
+
 def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, reimplemented: List[str], ignore: List[str]) -> list:
     typ = MdTableCell([])
     refid = memberdef.get('id')
@@ -45,7 +66,7 @@ def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, r
     refid_prefix = refid[:-35]
     if refid_prefix.startswith('group_'):
         refid_prefix = refid[:-36]
-    name = MdTableCell([MdLink([MdBold([Text(node.name)])], refid_prefix + '.md#' + node.get_anchor_hash())])
+    name = MdTableCell([MdLink([MdBold([Text(node.name)])], refid_prefix + '.md#' + node.get_anchor_hash(get_member_prefix(memberdef)))])
 
     kind = memberdef.get('kind')
 
@@ -560,17 +581,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                 pass
             name = memberdef.find('name').text
 
-            prefix = kind
-            if kind == 'variable':
-                var_type = memberdef.find('type')
-                if var_type is not None: 
-                    prefix = ''.join(var_type.itertext())
-            elif (kind == 'function' or kind == 'friend'):
-                func_ret_type = memberdef.find('type')
-                if func_ret_type is not None: 
-                    prefix = ''.join(func_ret_type.itertext())
-            elif kind == 'define':
-                prefix = '#define'
+            prefix = get_member_prefix(memberdef)
             
             overloaded_suffix = ''
             if node is not None and node.overloaded:

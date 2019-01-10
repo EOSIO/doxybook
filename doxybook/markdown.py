@@ -176,15 +176,25 @@ class MdDocument(Md):
             f.write('meta:\n')
             f.write('  - name: keywords\n')
             f.write('    content: ' + ' '.join(self.keywords) + '\n')
+    
+    def header_gatsby(self, f: MdRenderer):
+        f.write('title: ' + self.title + '\n')
+        if len(self.keywords) > 0:
+            #f.write('sidebar: auto\n')
+            #f.write('sidebarDepth: 1\n')
+            f.write('meta:\n')
+            f.write('  - name: keywords\n')
+            f.write('    content: ' + ' '.join(self.keywords) + '\n')
 
     def render(self, f: MdRenderer):
-        f.write('---\n')
-
-        if config.target == 'gitbook':
-            self.header_gitbook(f)
-        elif config.target == 'vuepress':
-            self.header_vuepress(f)
-        f.write('---\n\n')
+        # No need to add header for gatsby
+        if config.target != 'gatsby':
+            f.write('---\n')
+            if config.target == 'gitbook':
+                self.header_gitbook(f)
+            elif config.target == 'vuepress':
+                self.header_vuepress(f)
+            f.write('---\n\n')
 
         for child in self.children:
             if child is not None:
