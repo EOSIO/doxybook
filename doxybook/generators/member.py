@@ -35,6 +35,29 @@ SECTION_DEFS = {
 }
 
 """
+Some refid might include additional suffix, i.e.
+classeosio_1_1multi__index_a421ef78ccdc84f0f6b2b14e2732527ba_1a421ef78ccdc84f0f6b2b14e2732527ba
+or group__contract_ga7e3b8d6376c0895402569e4bc275a526_1ga7e3b8d6376c0895402569e4bc275a526
+or classeosio_1_1multi__index_a421ef78ccdc84f0f6b2b14e2732527ba
+or group__contract_ga7e3b8d6376c0895402569e4bc275a52
+or might be nothing at all i.e. classeosio_1_1multi__index
+which can't be used to refer to another markdown file
+This kind of refid needs to be trimmed down
+"""
+def get_markdown_name_from_refid(refid: str):
+    splitted_refid = refid.split('_')
+    len_of_splitted_refid = len(splitted_refid)
+    for _ in range (0, min(2, len_of_splitted_refid)):
+        refid_tail = splitted_refid[-1]
+        is_tail_member_id = len(refid_tail) >= 33 and len(refid_tail) <= 35 and re.search(r'^[0-9a-g]+$', refid_tail)
+        if is_tail_member_id:
+            # Remove tail from the splitted refid
+            splitted_refid.pop()
+    markdown_name = '_'.join(splitted_refid)
+    return markdown_name
+
+
+"""
 Get prefix of a member, i.e.
 int is prefix of `int foo()`
 #define is prefix of `#define`
@@ -66,7 +89,9 @@ def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, r
     refid_prefix = refid[:-35]
     if refid_prefix.startswith('group_'):
         refid_prefix = refid[:-36]
-    name = MdTableCell([MdLink([MdBold([Text(node.name)])], refid_prefix + '.md#' + node.get_anchor_hash(get_member_prefix(memberdef)))])
+    markdown_name = get_markdown_name_from_refid(refid)
+    # markdown_name = refid_prefix
+    name = MdTableCell([MdLink([MdBold([Text(node.name)])], markdown_name + '.md#' + node.get_anchor_hash(get_member_prefix(memberdef)))])
 
     kind = memberdef.get('kind')
 
