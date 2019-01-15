@@ -494,10 +494,13 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     sectiondefs = compounddef.findall('sectiondef')
     for sectiondef in sectiondefs:
         section_kind = sectiondef.get('kind')
+        # Skip is section kind is empty
+        if not section_kind:
+            continue
 
         if section_kind.startswith('private'):
             continue
-
+       
         document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
 
         table = make_section(sectiondef, cache, reimplemented, [])
@@ -588,6 +591,10 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     sectiondefs = compounddef.findall('sectiondef')
     for sectiondef in sectiondefs:
         section_kind = sectiondef.get('kind')
+        # Skip is section kind is empty
+        if not section_kind:
+            continue
+
         if section_kind.startswith('private'):
             continue
 
