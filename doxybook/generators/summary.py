@@ -24,16 +24,17 @@ def generate_recursive_modules(f: TextIO, modules: dict, level: int, diff: str):
         if 'innergroups' in value:
             generate_recursive_modules(f, value['innergroups'], level + 2, diff)
 
-def generate_files(f: TextIO, files: dict, level: int, diff: str):
+def generate_files(f: TextIO, files: dict, level: int, diff: str, output_path: str):
     for key,value in files.items():
         if key == '#':
             continue
         if isinstance(value, dict):
             f.write(' ' * level + generate_link(key + '/', diff + '/' + value['#'] + '.md'))
-            generate_files(f, value, level + 2, diff)
+            generate_files(f, value, level + 2, diff, output_path)
         else:
             f.write(' ' * level + generate_link(key, diff + '/' + value + '.md'))
-            f.write(' ' * level + generate_link(key + ' - source', diff + '/' + value + '_source.md'))
+            if os.path.exists(os.path.join(output_path, diff, value + '_source.md')):
+                f.write(' ' * level + generate_link(key + ' - source', diff + '/' + value + '_source.md'))
 
 def generate_summary(output_path: str, summary_file: str, root: Node, modules: list, pages: list, files: dict):
     print('Modifying', summary_file)
@@ -95,7 +96,7 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
             generate_recursive(f, root, offset + 4, diff)
         if files:
             f.write(' ' * (offset+2) + generate_link('Files', diff + '/' + 'files.md'))
-            generate_files(f, files, offset + 4, diff)
+            generate_files(f, files, offset + 4, diff, output_path)
 
         # Write second part of the file
         for i in range(end, len(content)):

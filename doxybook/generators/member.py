@@ -369,7 +369,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     if node.kind.is_parent():
         document.append(generate_breadcrubs(node))
 
-    if compounddef.get('kind') == 'file':
+    if compounddef.get('kind') == 'file' and os.path.exists(os.path.join(output_path, node.refid + '_source.md')):
         document.append(MdParagraph([MdBold([MdLink([Text('Go to the source code of this file.')], refid + '_source.md')])]))
 
     # Add brief description
