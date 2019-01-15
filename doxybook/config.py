@@ -5,5 +5,6 @@ class Config:
         self.target = 'gitbook'
         self.hints = True
         self.show_func_sig = False
+        self.hide_files_page = False
 
 config = Config()

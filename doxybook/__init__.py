@@ -83,6 +83,12 @@ def main():
         required=False,
         default=config.show_func_sig
     )
+    parser.add_argument('--hide-files-page', 
+        action='store_true',
+        help='If set to true, files page will not be converted to markdown and skipped (default: false)',
+        required=False,
+        default=config.hide_files_page
+    )
 
     args = parser.parse_args()
 
@@ -94,6 +100,7 @@ def main():
     config.noindex = args.noindex
     config.hints = args.hints
     config.show_func_sig = args.show_func_sig
+    config.hide_files_page = args.hide_files_page
 
     if args.summary and not os.path.exists(args.summary):
         raise Exception('The provided summary file does not exist!')
