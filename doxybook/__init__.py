@@ -89,6 +89,12 @@ def main():
         required=False,
         default=config.hide_files_page
     )
+    parser.add_argument('--hide-class-list_expansion', 
+        action='store_true',
+        help='If set to true, class list expansion in the SUMMARY.md will be hidden, this has no effect if no SUMMARY.md is generated (default: false)',
+        required=False,
+        default=config.hide_class_list_expansion
+    )
 
     args = parser.parse_args()
 
@@ -101,6 +107,7 @@ def main():
     config.hints = args.hints
     config.show_func_sig = args.show_func_sig
     config.hide_files_page = args.hide_files_page
+    config.hide_class_list_expansion = args.hide_class_list_expansion
 
     if args.summary and not os.path.exists(args.summary):
         raise Exception('The provided summary file does not exist!')

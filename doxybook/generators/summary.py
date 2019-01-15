@@ -90,7 +90,9 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
         f.write(' ' * (offset+2) + generate_link('Variable Index', diff + '/' + 'variables.md'))
         f.write(' ' * (offset+2) + generate_link('Enumeration Index', diff + '/' + 'enumerations.md'))
         f.write(' ' * (offset+2) + generate_link('Class List', diff + '/' + 'annotated.md'))
-        generate_recursive(f, root, offset + 4, diff)
+        # Determine to show or hide class list expansion
+        if not config.hide_class_list_expansion:
+            generate_recursive(f, root, offset + 4, diff)
         if files:
             f.write(' ' * (offset+2) + generate_link('Files', diff + '/' + 'files.md'))
             generate_files(f, files, offset + 4, diff)
