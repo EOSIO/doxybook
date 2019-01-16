@@ -31,7 +31,8 @@ SECTION_DEFS = {
     'union': 'Unions',
     'related': 'Related',
     'define': 'Defines',
-    'interface': 'Interfaces'
+    'interface': 'Interfaces',
+    'user-defined': 'User Defined'
 }
 
 """
@@ -494,8 +495,8 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     sectiondefs = compounddef.findall('sectiondef')
     for sectiondef in sectiondefs:
         section_kind = sectiondef.get('kind')
-        # Skip is section kind is empty
-        if not section_kind:
+        # Skip if section kind is not in the list of understood keywords
+        if section_kind not in list(SECTION_DEFS.keys()):
             continue
 
         if section_kind.startswith('private'):
@@ -591,8 +592,8 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     sectiondefs = compounddef.findall('sectiondef')
     for sectiondef in sectiondefs:
         section_kind = sectiondef.get('kind')
-        # Skip is section kind is empty
-        if not section_kind:
+        # Skip if section kind is not in the list of understood keywords
+        if section_kind not in list(SECTION_DEFS.keys()):
             continue
 
         if section_kind.startswith('private'):
