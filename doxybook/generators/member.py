@@ -523,8 +523,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         inherited_sectiondefs = inheritance_compounddef.findall('sectiondef')
         for sec in inherited_sectiondefs:
             section_kind = sec.get('kind')
-
-            if section_kind.startswith('private'):
+            if not section_kind or section_kind.startswith('private') or section_kind not in SECTION_DEFS:
                 continue
 
             if refid in skip_sections:
@@ -548,7 +547,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                 for sec in inherited_sectiondefs:
                     section_kind = sec.get('kind')
 
-                    if section_kind.startswith('private'):
+                    if not section_kind or section_kind.startswith('private') or section_kind not in SECTION_DEFS:
                         continue
 
                     if section_kind in missing_sections[refid]:
