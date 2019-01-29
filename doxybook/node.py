@@ -1,6 +1,7 @@
 from doxybook.kind import Kind
 from doxybook.utils import mangle_name
 from doxybook.config import config
+from doxybook.refid import normalize_refid
 import re
 
 class Node:
@@ -69,12 +70,12 @@ class Node:
         return self.kind.value
 
     def generate_url(self) -> str:
-        if self.kind.is_parent():
-            return self.refid + '.md'
-        else:
-            if self.refid.startswith('group_'):
-                return self.refid[:-36] + '.md#' + self.get_anchor_hash()
-            return self.refid[:-35] + '.md#' + self.get_anchor_hash()
+        normalized_refid = normalize_refid(self.refid)
+        url = normalized_refid + '.md'
+        if not self.kind.is_parent():
+            url += '#' + self.get_anchor_hash()
+        return url
 
     def finalize(self):
         self.url = self.generate_url()
+        print('urrrlll', self.refid, self.url)
