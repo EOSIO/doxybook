@@ -57,7 +57,7 @@ def generate_summary(output_path: str, summary_file: str, root: Node, modules: l
             if m is not None:
                 start = m.start()
                 start = i
-                content[i] = re.sub(r"\((.*)\)", "(/classes.md)", line)
+                content[i] = re.sub(r"\((.*)\)", "()", line)
             continue
 
         if start is not None and end is None:

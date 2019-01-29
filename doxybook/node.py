@@ -78,4 +78,3 @@ class Node:
 
     def finalize(self):
         self.url = self.generate_url()
-        print('urrrlll', self.refid, self.url)
