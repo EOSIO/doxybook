@@ -89,7 +89,7 @@ def main():
         required=False,
         default=config.hide_files_page
     )
-    parser.add_argument('--hide-class-list_expansion', 
+    parser.add_argument('--hide-class-list-expansion', 
         action='store_true',
         help='If set to true, class list expansion in the SUMMARY.md will be hidden, this has no effect if no SUMMARY.md is generated (default: false)',
         required=False,
