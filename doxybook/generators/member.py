@@ -9,6 +9,7 @@ from doxybook.kind import Kind
 from doxybook.cache import Cache
 from doxybook.config import config
 from doxybook.generators.paragraph import generate_paragraph, convert_xml_para
+from doxybook.refid import extract_refid_prefix
 
 SECTION_DEFS = {
     'public-type': 'Public Types',
@@ -31,7 +32,8 @@ SECTION_DEFS = {
     'union': 'Unions',
     'related': 'Related',
     'define': 'Defines',
-    'interface': 'Interfaces'
+    'interface': 'Interfaces',
+    'user-defined': 'User Defined'
 }
 
 def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, reimplemented: List[str], ignore: List[str]) -> list:
@@ -42,9 +44,10 @@ def generate_brief_row(memberdef: xml.etree.ElementTree.Element, cache: Cache, r
         raise Exception('ignored')
 
     node = cache.get(refid)
-    refid_prefix = refid[:-35]
-    if refid_prefix.startswith('group_'):
-        refid_prefix = refid[:-36]
+    # refid_prefix = refid[:-35]
+    # if refid_prefix.startswith('group_'):
+    #     refid_prefix = refid[:-36]
+    refid_prefix = extract_refid_prefix(refid)
     name = MdTableCell([MdLink([MdBold([Text(node.name)])], refid_prefix + '.md#' + node.get_anchor_hash())])
 
     kind = memberdef.get('kind')
@@ -153,6 +156,22 @@ def make_function_code(compoundname: str, memberdef: xml.etree.ElementTree.Eleme
     code = []
     params = memberdef.findall('param')
     argsstring = memberdef.find('argsstring').text
+
+    # Print template params
+    templateparams = memberdef.findall('./templateparamlist/param')
+    if len(templateparams) > 0:
+        templateparams_code = 'template<'
+        for index, templateparam in enumerate(templateparams):
+            templateparams_code += templateparam.findtext('type')
+            templateparam_declname = templateparam.findtext('declname')
+            if templateparam_declname:
+                templateparams_code += ' ' + templateparam_declname
+            if index != len(templateparams) - 1:
+                templateparams_code += ', '
+            else:
+                templateparams_code += '>'
+        code.append(templateparams_code)
+
     typ = ''.join(memberdef.find('type').itertext())
     if len(typ) > 0:
         typ += ' '
@@ -187,13 +206,11 @@ def make_function_code(compoundname: str, memberdef: xml.etree.ElementTree.Eleme
     if memberdef.get('virt') == 'pure-virtual':
         extra += ' = 0'
 
-    name_prefix = ''
-    if not name_prefix:
-        name_prefix = compoundname + '::'
+    definition = memberdef.findtext('definition', '')
     if len(params) > 0:
-        code.append(prefix + typ + name_prefix + memberdef.find('name').text + ' (')
+        code.append(prefix + definition + '(')
     else:
-        code.append(prefix + typ + name_prefix + memberdef.find('name').text + ' ()' + extra)
+        code.append(prefix + definition + '()' + extra)
 
     param_index = 0
     for param in params:
@@ -301,13 +318,18 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     keywords.append(compoundname)
 
     # Add title
-    title = compounddef.get('kind') + ' ' + compoundname
+    kind = compounddef.get('kind')
+    # Ignore kind for group
+    if kind == 'group':
+        title = compounddef.findtext('title', compoundname)
+    else:
+        title = kind + ' ' + compoundname
     document.append(MdHeader(1, [Text(title)]))
 
     if node.kind.is_parent():
         document.append(generate_breadcrubs(node))
 
-    if compounddef.get('kind') == 'file':
+    if compounddef.get('kind') == 'file' and os.path.exists(os.path.join(output_path, node.refid + '_source.md')):
         document.append(MdParagraph([MdBold([MdLink([Text('Go to the source code of this file.')], refid + '_source.md')])]))
 
     # Add brief description
@@ -323,7 +345,7 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         document.append(p)
         document.append(Text('\n'))
 
-    # Add inheriance
+    # Add inheritance
     inheritance_refids:List[str] = []
     basecompoundrefs = compounddef.findall('basecompoundref')
     if len(basecompoundrefs) > 0:
@@ -483,13 +505,14 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     sectiondefs = compounddef.findall('sectiondef')
     for sectiondef in sectiondefs:
         section_kind = sectiondef.get('kind')
+        # Skip if section kind is not in the list of understood keywords
+        if section_kind not in list(SECTION_DEFS.keys()):
+            continue
 
         if section_kind.startswith('private'):
             continue
 
-        # Seems to work incorrectly, would print an empty "Functions" section, and then a populated "Functions Documentation" section below it. Only useful for classes.
-        if section_kind not in "func" and section_kind not in "typedef":
-            document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
+        document.append(MdHeader(2, [Text(SECTION_DEFS[section_kind])]))
 
         table = make_section(sectiondef, cache, reimplemented, [])
         document.append(table)
@@ -579,6 +602,10 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
     sectiondefs = compounddef.findall('sectiondef')
     for sectiondef in sectiondefs:
         section_kind = sectiondef.get('kind')
+        # Skip if section kind is not in the list of understood keywords
+        if section_kind not in list(SECTION_DEFS.keys()):
+            continue
+
         if section_kind.startswith('private'):
             continue
 
@@ -589,23 +616,50 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
         for memberdef in memberdefs:
             kind = memberdef.get('kind')
             refid = memberdef.get('id')
+            name = memberdef.find('name').text
+
             node = None
             try:
                 node = cache.get(refid)
             except:
+                node = Node(name, refid, Kind(kind))
                 pass
-            name = memberdef.find('name').text
+
+            prefix = kind
+
+            overloaded_suffix = ''
+            if node is not None and node.overloaded:
+                overloaded_suffix = ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')'
+
+            signature_suffix = ''
+            if kind == 'function' or kind == 'friend':
+                params = memberdef.findall('param')
+                if len(params) == 0:
+                    signature_suffix += ' ()'
+                else:
+                  for index, param in enumerate(params):
+                      if index == 0:
+                          signature_suffix += ' ('
+                      param_type = param.find('type')
+                      if param_type is not None:
+                          signature_suffix += ''.join(param_type.itertext())
+                      param_declname = param.find('declname')
+                      if param_declname is not None:
+                          signature_suffix += ' ' + ''.join(param_declname.itertext())
+                      if index != len(params) - 1:
+                          signature_suffix += ', '
+                      else:
+                          signature_suffix += ')'
+                is_const = memberdef.get('const') == 'yes'
+                if is_const:
+                    signature_suffix += ' const'
+
+            suffix = signature_suffix if config.show_func_sig else overloaded_suffix
 
             if config.target == 'gitbook':
-                if node is not None and node.overloaded:
-                    document.append(MdHeader(3, [Text(kind + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')</a>')]))
-                else:
-                    document.append(MdHeader(3, [Text(kind + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + '</a>')]))
+                document.append(MdHeader(3, [Text(prefix + ' <a id=\"' + refid[-34:] + '\" href=\"#' + refid[-34:] + '\">' + name + suffix + '</a>')]))
             else:
-                if node is not None and node.overloaded:
-                    document.append(MdHeader(3, [Text(kind + ' ' + name + ' (' + str(node.overload_num) + '/' + str(node.overload_total) + ')')]))
-                else:
-                    document.append(MdHeader(3, [Text(kind + ' ' + name)]))
+                document.append(MdHeader(3, [Text(prefix + ' ' + name + suffix)]))
 
             code = []
             if kind == 'function':
@@ -627,6 +681,25 @@ def generate_member(index_path: str, output_path: str, refid: str, cache: Cache)
                         value += ' ' + initializer.text
                     code.append('    ' + value + ',')
                 code.append('};')
+
+            elif kind == 'define':
+                define_code = '#define ' + memberdef.find('name').text
+                params = memberdef.findall('./param/defname')
+                for index, param in enumerate(params):
+                    if index == 0: define_code += '('
+                    define_code += param.text
+                    if index != len(params) - 1:
+                        define_code += ', '
+                    else:
+                        define_code += ')'
+                initializer = memberdef.find('initializer')
+                if initializer is not None:
+                    initializer_text = ''.join(initializer.itertext())
+                    if '\n' in initializer_text:
+                      define_code += '\\\n' + initializer_text
+                    else:
+                      define_code += ' ' + initializer_text
+                code.append(define_code)
 
             elif kind == 'define':
                 initializer = memberdef.find('initializer')

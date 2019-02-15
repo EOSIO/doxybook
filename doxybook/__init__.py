@@ -38,55 +38,76 @@ def write_members(index_path: str, output_path: str, node: Node, cache: Cache):
 
 def main():
     parser = argparse.ArgumentParser(description='Convert doxygen XML output into GitBook or Vuepress markdown output.')
-    parser.add_argument('-t', '--target', 
-        type=str, 
-        help='Select the target: Gitbook (default) or Vuepress, for example: "-t vuepress" or "-t gitbook"',
+    parser.add_argument('-t', '--target',
+        type=str,
+        help='Select the target: Gitbook (default) or Vuepress or Gatsby, for example: "-t vuepress" or "-t gitbook" or "-t gatsby"',
         required=False,
         default=config.target
     )
-    parser.add_argument('-i', '--input', 
-        type=str, 
+    parser.add_argument('-i', '--input',
+        type=str,
         help='Path to doxygen generated xml folder',
         required=True
     )
-    parser.add_argument('-o', '--output', 
-        type=str, 
+    parser.add_argument('-o', '--output',
+        type=str,
         help='Path to the destination folder',
         required=True
     )
-    parser.add_argument('-s', '--summary', 
-        type=str, 
+    parser.add_argument('-s', '--summary',
+        type=str,
         help='Path to the summary file which contains a link to index.md in the folder pointed by --input (default: false)',
         required=False
     )
-    parser.add_argument('-d', '--debug', 
-        type=bool, 
+    parser.add_argument('-d', '--debug',
+        type=bool,
         help='Debug the class hierarchy (default: false)',
         required=False,
         default=config.debug
     )
-    parser.add_argument('--noindex', 
-        type=bool, 
+    parser.add_argument('--noindex',
+        type=bool,
         help='If set to true, no search keywords will be generated at the file headers (default: false)',
         required=False,
         default=config.noindex
     )
-    parser.add_argument('--hints', 
-        type=bool, 
+    parser.add_argument('--hints',
+        type=bool,
         help='(Vuepress only) If set to true, hints will be generated for the sections note, bug, and a warning (default: true)',
         required=False,
         default=config.hints
     )
+    parser.add_argument('--show-func-sig',
+        action='store_true',
+        help='If set to true, function signature will be shown in the markdown header (default: false)',
+        required=False,
+        default=config.show_func_sig
+    )
+    parser.add_argument('--hide-files-page',
+        action='store_true',
+        help='If set to true, files page will not be converted to markdown and skipped (default: false)',
+        required=False,
+        default=config.hide_files_page
+    )
+    parser.add_argument('--hide-class-list-expansion',
+        action='store_true',
+        help='If set to true, class list expansion in the SUMMARY.md will be hidden, this has no effect if no SUMMARY.md is generated (default: false)',
+        required=False,
+        default=config.hide_class_list_expansion
+    )
 
     args = parser.parse_args()
 
-    if args.target != 'gitbook' and args.target != 'vuepress':
+    if args.target != 'gitbook' and args.target != 'vuepress' and args.target != 'gatsby':
         raise Exception('Unknown target: ' + str(args.target))
 
     config.debug = args.debug
     config.target = args.target
     config.noindex = args.noindex
     config.hints = args.hints
+    config.show_func_sig = args.show_func_sig
+    config.hide_files_page = args.hide_files_page
+    config.hide_class_list_expansion = args.hide_class_list_expansion
 
     if args.summary and not os.path.exists(args.summary):
         raise Exception('The provided summary file does not exist!')
@@ -125,7 +146,9 @@ def main():
             generate_page(args.input, args.output, child.refid, cache)
 
     # Generate files page
-    files = generate_files(args.input, args.output, root, cache)
+    files = {}
+    if not config.hide_files_page:
+        files = generate_files(args.input, args.output, root, cache)
 
     # Write all files out
     for child in root.members:

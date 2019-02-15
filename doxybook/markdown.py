@@ -31,12 +31,18 @@ class Md:
         self.children.extend(child)
 
 class Text:
-    def __init__(self, text: str):
+    def __init__(self, text: str, escape: bool = True):
         self.text = text
+        self.escape = escape
 
     def render(self, f: MdRenderer, indent: str):
         if self.text:
-            f.write(escape(self.text))
+            if self.escape:
+                f.write(escape(self.text))
+            else:
+                f.write(self.text)
+
+
 
 class Br:
     def __init__(self):
@@ -173,7 +179,6 @@ class MdDocument(Md):
 
     def render(self, f: MdRenderer):
         f.write('---\n')
-
         if config.target == 'gitbook':
             self.header_gitbook(f)
         elif config.target == 'vuepress':
